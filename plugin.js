@@ -9,7 +9,6 @@
  */
 
 ( function() {
-
 	'use strict';
 
 	CKEDITOR.plugins.add( 'embedworkflow', {
@@ -20,6 +19,7 @@
 
 		init: function( editor ) {
 			var widgetDefinition = CKEDITOR.plugins.embedBase.createWidgetBaseDefinition( editor ),
+				defaultInit = widgetDefinition.init,
 				// Name of custom attribute used to store the oEmbed URL.
 				urlAttribute = 'data-oembed-workflow-url';
 
@@ -34,6 +34,12 @@
 					'//localhost:9090/?url={url}&callback={callback}'
 				),
 
+				init: function( wid ) {
+					defaultInit.call( this );
+
+					this.on( 'handleResponse', this._handleWorkflowResponse, null, null, 1000 );
+				},
+
 				upcast: function( el, data ) {
 					if ( el.name == 'div' && el.attributes[ urlAttribute ] ) {
 						data.url = el.attributes[ urlAttribute ];
@@ -44,6 +50,19 @@
 
 				downcast: function( el ) {
 					el.attributes[ urlAttribute ] = this.data.url;
+				},
+
+				_handleWorkflowResponse: function( evt ) {
+
+					var hasHtml = evt.data && evt.data.html,
+						provider = evt.data.response && evt.data.response.provider_name;
+
+					if ( hasHtml && provider == 'tracTicket' ) {
+						// Let's say that we want to add a link to each ticket widget.
+						evt.data.html += '<a href="http://dev.ckeditor.com/">See all tickets</a>';
+					} else {
+						console.log( 'no html :(' );
+					}
 				}
 			}, true );
 
