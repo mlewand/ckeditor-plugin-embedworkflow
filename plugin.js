@@ -52,6 +52,13 @@
 					el.attributes[ urlAttribute ] = this.data.url;
 				},
 
+				// RegExp will match anything, because we want to allow some shortcuts like:
+				// * #12345 - for ticket numbers.
+				// * ckPlugin:tabletools - for CKEditor plugins.
+				//
+				// Still we want ofc to allow users to use valid URLs.
+				urlRegExp: /.*/,
+
 				_handleWorkflowResponse: function( evt ) {
 
 					var hasHtml = evt.data && evt.data.html,
@@ -67,6 +74,19 @@
 			}, true );
 
 			editor.widgets.add( 'embedworkflow', widgetDefinition );
+
+			// Expose a convenient API to insert a widget.
+			editor.insertEmbedWorkflow = function( url, params ) {
+				var editor = this,
+					element = editor.document.createElement( 'div' ),
+					widget;
+
+				editor.insertElement( element );
+				widget = editor.widgets.initOn( element, 'embedworkflow' );
+				widget.loadContent( url, params );
+
+				return widget;
+			};
 
 			// Do not filter contents of the div[<urlAttribute>] at all.
 			editor.filter.addElementCallback( function( el ) {
